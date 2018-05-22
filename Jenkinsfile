@@ -33,7 +33,8 @@ pipeline {
     post {
         success {
             script {
-                if(!currentBuild.getPreviousBuild().result.toString().equals('SUCCESS')) {
+                previousBuild = currentBuild.getPreviousBuild()
+                if(previousBuild && !previousBuild.result.toString().equals('SUCCESS')) {
                     mail body: "Hello ${GIT_NAME},\n\nI'm please to report that the throneteki-deck-helper build is now working again.  Please find details of the build here:\n\n${env.BUILD_URL}\n\nKind regards,\nThe Iron Throne Build Server",
                     from: 'The Iron Throne Build Server <jenkins@theironthrone.net>',
                     replyTo: 'noreply@theironthrone.net',
@@ -45,7 +46,8 @@ pipeline {
 
         failure {
             script {
-                if(currentBuild.getPreviousBuild().result.toString().equals('SUCCESS')) {
+                previousBuild = currentBuild.getPreviousBuild()
+                if(!previousBuild || previousBuild.result.toString().equals('SUCCESS')) {
                     BUILD_STATUS_SUBJECT='broken'
                     BUILD_STATUS='now broken'
                 } else {
