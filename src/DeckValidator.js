@@ -233,6 +233,11 @@ class DeckValidator {
             cardCountByName[cardQuantity.card.name].count += cardQuantity.count;
         }
 
+        for(let card of deck.bannerCards || []) {
+            cardCountByName[card.name] = cardCountByName[card.name] || { name: card.name, type: card.type, limit: card.deckLimit, count: 0 };
+            cardCountByName[card.name].count += 1;
+        }
+
         // Only add rookery cards here as they don't count towards deck limits
         allCards = allCards.concat(deck.rookeryCards || []);
 
