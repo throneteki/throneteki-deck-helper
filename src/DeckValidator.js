@@ -157,6 +157,10 @@ const agendaRules = {
         requiredPlots: 10,
         maxDoubledPlots: 2
     },
+    // The Free Folk
+    '11079': {
+        cannotInclude: card => card.faction !== 'neutral'
+    },
     // Draft Agendas
     // The Power of Wealth
     '00001': rulesForDraft({
