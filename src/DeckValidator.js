@@ -270,7 +270,14 @@ class DeckValidator {
             }
         }
 
-        let restrictedResult = this.restrictedList.validate(allCards.map(cardQuantity => cardQuantity.card));
+        let uniqueCards = allCards.map(cardQuantity => cardQuantity.card).concat(deck.bannerCards);
+
+        // Ensure agenda cards are validated against the restricted list
+        if(deck.agenda) {
+            uniqueCards.push(deck.agenda);
+        }
+
+        let restrictedResult = this.restrictedList.validate(uniqueCards);
         let includesDraftCards = this.isDraftCard(deck.agenda) || allCards.some(cardQuantity => this.isDraftCard(cardQuantity.card));
 
         if(includesDraftCards) {
