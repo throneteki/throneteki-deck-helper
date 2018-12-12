@@ -9,7 +9,7 @@
  */
 function formatDeckAsFullCards(deck, data) {
     let newDeck = {
-        _id: deck._id,
+        id: deck.id,
         name: deck.name,
         username: deck.username,
         lastUpdated: deck.lastUpdated,
@@ -21,10 +21,14 @@ function formatDeckAsFullCards(deck, data) {
     }
 
     if(deck.agenda) {
-        newDeck.agenda = data.cards[deck.agenda.code];
+        if(deck.agenda.code) {
+            newDeck.agenda = data.cards[deck.agenda.code];
+        } else {
+            newDeck.agenda = data.cards[deck.agenda];
+        }
     }
 
-    newDeck.bannerCards = (deck.bannerCards || []).map(card => data.cards[card.code]);
+    newDeck.bannerCards = (deck.bannerCards || []).map(card => data.cards[card]);
     newDeck.drawCards = processCardCounts(deck.drawCards || [], data.cards);
     newDeck.plotCards = processCardCounts(deck.plotCards || [], data.cards);
     newDeck.rookeryCards = processCardCounts(deck.rookeryCards || [], data.cards);
@@ -34,7 +38,7 @@ function formatDeckAsFullCards(deck, data) {
 
 function processCardCounts(cardCounts, cardData) {
     let cardCountsWithData = cardCounts.map(cardCount => {
-        return { count: cardCount.count, card: cardCount.card.custom ? cardCount.card : cardData[cardCount.card.code] };
+        return { count: cardCount.count, card: cardData[cardCount.code] };
     });
 
     // Filter out any cards that aren't available in the card data.

@@ -4,7 +4,7 @@
  */
 function formatDeckAsShortCards(deck) {
     let newDeck = {
-        _id: deck._id,
+        id: deck.id,
         name: deck.name,
         username: deck.username,
         lastUpdated: deck.lastUpdated,
@@ -12,10 +12,10 @@ function formatDeckAsShortCards(deck) {
     };
 
     if(deck.agenda) {
-        newDeck.agenda = { code: deck.agenda.code };
+        newDeck.agenda = deck.agenda.code;
     }
 
-    newDeck.bannerCards = (deck.bannerCards || []).map(card => ({ code: card.code }));
+    newDeck.bannerCards = (deck.bannerCards || []).map(card => card.code);
     newDeck.drawCards = formatCards(deck.drawCards || []);
     newDeck.plotCards = formatCards(deck.plotCards || []);
     newDeck.rookeryCards = formatCards(deck.rookeryCards || []);
@@ -25,7 +25,7 @@ function formatDeckAsShortCards(deck) {
 
 function formatCards(cardCounts) {
     return cardCounts.map(cardCount => {
-        return { count: cardCount.count, card: cardCount.card.custom ? cardCount.card : { code: cardCount.card.code } };
+        return { count: cardCount.count, code: cardCount.card.code };
     });
 }
 
