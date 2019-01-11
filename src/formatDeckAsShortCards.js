@@ -11,13 +11,7 @@ function formatDeckAsShortCards(deck) {
         faction: { name: deck.faction.name, value: deck.faction.value }
     };
 
-    if(deck.agenda) {
-        newDeck.agenda = deck.agenda.code;
-    }
-
-    newDeck.bannerCards = (deck.bannerCards || []).map(card => card.code);
-    newDeck.drawCards = formatCards(deck.drawCards || []);
-    newDeck.plotCards = formatCards(deck.plotCards || []);
+    newDeck.cards = formatCards(deck.cards || []);
     newDeck.rookeryCards = formatCards(deck.rookeryCards || []);
 
     return newDeck;

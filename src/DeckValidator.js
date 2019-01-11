@@ -12,8 +12,18 @@ function getDeckCount(deck) {
     return count;
 }
 
+function getAgenda(deck) {
+    let agenda = deck.cards.find(c => c.card.type === 'agenda');
+
+    return agenda && agenda.card;
+}
+
 function hasTrait(card, trait) {
     return card.traits.some(t => t.toLowerCase() === trait.toLowerCase());
+}
+
+function isDrawCard(card) {
+    return ['location', 'character', 'event', 'attachment'].includes(card.type);
 }
 
 function isCardInReleasedPack(packs, card) {
@@ -43,7 +53,7 @@ function rulesForBanner(faction, factionName) {
         rules: [
             {
                 message: 'Must contain 12 or more ' + factionName + ' cards',
-                condition: deck => getDeckCount(deck.drawCards.filter(cardQuantity => cardQuantity.card.faction === faction)) >= 12
+                condition: deck => getDeckCount(deck.cards.filter(cardQuantity => isDrawCard(cardQuantity.card) && cardQuantity.card.faction === faction)) >= 12
             }
         ]
     };
@@ -85,7 +95,7 @@ const agendaRules = {
         rules: [
             {
                 message: 'You cannot include more than 15 neutral cards in a deck with Fealty',
-                condition: deck => getDeckCount(deck.drawCards.filter(cardEntry => cardEntry.card.faction === 'neutral')) <= 15
+                condition: deck => getDeckCount(deck.cards.filter(cardEntry => isDrawCard(cardEntry.card) && cardEntry.card.faction === 'neutral')) <= 15
             }
         ]
     },
@@ -95,7 +105,7 @@ const agendaRules = {
         rules: [
             {
                 message: 'Kings of Summer cannot include Winter plot cards',
-                condition: deck => !(deck.plotCards.some(cardQuantity => hasTrait(cardQuantity.card, 'Winter')))
+                condition: deck => !(deck.cards.some(cardQuantity => cardQuantity.card.type === 'plot' && hasTrait(cardQuantity.card, 'Winter')))
             }
         ]
     },
@@ -105,7 +115,7 @@ const agendaRules = {
         rules: [
             {
                 message: 'Kings of Winter cannot include Summer plot cards',
-                condition: deck => !(deck.plotCards.some(cardQuantity => hasTrait(cardQuantity.card, 'Summer')))
+                condition: deck => !(deck.cards.some(cardQuantity => cardQuantity.card.type === 'plot' && hasTrait(cardQuantity.card, 'Summer')))
             }
         ]
     },
@@ -116,7 +126,7 @@ const agendaRules = {
             {
                 message: 'Rains of Castamere must contain exactly 5 different Scheme plots',
                 condition: deck => {
-                    let schemePlots = deck.plotCards.filter(cardQuantity => hasTrait(cardQuantity.card, 'Scheme'));
+                    let schemePlots = deck.cards.filter(cardQuantity => cardQuantity.card.type === 'plot' && hasTrait(cardQuantity.card, 'Scheme'));
                     return schemePlots.length === 5 && getDeckCount(schemePlots) === 5;
                 }
             }
@@ -128,7 +138,7 @@ const agendaRules = {
         rules: [
             {
                 message: 'Alliance cannot have more than 2 Banner agendas',
-                condition: deck => !deck.bannerCards || deck.bannerCards.length <= 2
+                condition: deck => deck.cards.filter(c => c.card.traits.includes('Banner').length <= 2)
             }
         ]
     },
@@ -138,7 +148,7 @@ const agendaRules = {
         rules: [
             {
                 message: 'The Brotherhood Without Banners cannot include loyal characters',
-                condition: deck => !(deck.drawCards.some(cardQuantity => cardQuantity.card.type === 'character' && cardQuantity.card.loyal))
+                condition: deck => !(deck.cards.some(cardQuantity => cardQuantity.card.type === 'character' && cardQuantity.card.loyal))
             }
         ]
     },
@@ -148,7 +158,7 @@ const agendaRules = {
         rules: [
             {
                 message: 'Must contain 12 or more Maester characters',
-                condition: deck => getDeckCount(deck.drawCards.filter(cardQuantity => cardQuantity.card.type === 'character' && hasTrait(cardQuantity.card, 'Maester'))) >= 12
+                condition: deck => getDeckCount(deck.cards.filter(cardQuantity => cardQuantity.card.type === 'character' && hasTrait(cardQuantity.card, 'Maester'))) >= 12
             }
         ]
     },
@@ -169,7 +179,7 @@ const agendaRules = {
             {
                 message: 'Cannot include cards from more than 1 outside faction',
                 condition: deck => {
-                    let outOfFactionCards = deck.drawCards.concat(deck.plotCards).filter(cardQuantity => cardQuantity.card.faction !== deck.faction.value && cardQuantity.card.faction !== 'neutral');
+                    let outOfFactionCards = deck.cards.filter(cardQuantity => cardQuantity.card.faction !== deck.faction.value && cardQuantity.card.faction !== 'neutral');
                     let factions = outOfFactionCards.map(cardQuantity => cardQuantity.card.faction);
                     return factions.length <= 1;
                 }
@@ -187,7 +197,7 @@ const agendaRules = {
             {
                 message: 'Cannot include cards from more than 2 outside factions',
                 condition: deck => {
-                    let outOfFactionCards = deck.drawCards.concat(deck.plotCards).filter(cardQuantity => cardQuantity.card.faction !== deck.faction.value && cardQuantity.card.faction !== 'neutral');
+                    let outOfFactionCards = deck.cards.filter(cardQuantity => cardQuantity.card.faction !== deck.faction.value && cardQuantity.card.faction !== 'neutral');
                     let factions = outOfFactionCards.map(cardQuantity => cardQuantity.card.faction);
                     return factions.length <= 2;
                 }
@@ -210,8 +220,8 @@ class DeckValidator {
         let errors = [];
         let unreleasedCards = [];
         let rules = this.getRules(deck);
-        let plotCount = getDeckCount(deck.plotCards);
-        let drawCount = getDeckCount(deck.drawCards);
+        let plotCount = getDeckCount(deck.cards.filter(c => c.card.type === 'plot'));
+        let drawCount = getDeckCount(deck.cards.filter(c => isDrawCard(c.card)));
 
         if(plotCount < rules.requiredPlots) {
             errors.push('Too few plot cards');
@@ -229,17 +239,12 @@ class DeckValidator {
             }
         }
 
-        let allCards = deck.plotCards.concat(deck.drawCards);
+        let allCards = deck.cards;
         let cardCountByName = {};
 
         for(let cardQuantity of allCards) {
             cardCountByName[cardQuantity.card.name] = cardCountByName[cardQuantity.card.name] || { name: cardQuantity.card.name, type: cardQuantity.card.type, limit: cardQuantity.card.deckLimit, count: 0 };
             cardCountByName[cardQuantity.card.name].count += cardQuantity.count;
-        }
-
-        for(let card of deck.bannerCards || []) {
-            cardCountByName[card.name] = cardCountByName[card.name] || { name: card.name, type: card.type, limit: card.deckLimit, count: 0 };
-            cardCountByName[card.name].count += 1;
         }
 
         // Only add rookery cards here as they don't count towards deck limits
@@ -255,8 +260,9 @@ class DeckValidator {
             }
         }
 
-        if(deck.agenda && !isCardInReleasedPack(this.packs, deck.agenda)) {
-            unreleasedCards.push(deck.agenda.label + ' is not yet released');
+        let agenda = getAgenda(deck);
+        if(agenda && !isCardInReleasedPack(this.packs, agenda)) {
+            unreleasedCards.push(agenda.label + ' is not yet released');
         }
 
         let doubledPlots = Object.values(cardCountByName).filter(card => card.type === 'plot' && card.count === 2);
@@ -270,15 +276,15 @@ class DeckValidator {
             }
         }
 
-        let uniqueCards = allCards.map(cardQuantity => cardQuantity.card).concat(deck.bannerCards);
+        let uniqueCards = allCards.map(cardQuantity => cardQuantity.card);
 
         // Ensure agenda cards are validated against the restricted list
-        if(deck.agenda) {
-            uniqueCards.push(deck.agenda);
+        if(agenda) {
+            uniqueCards.push({ card: agenda, count: 1});
         }
 
         let restrictedResult = this.restrictedList.validate(uniqueCards);
-        let includesDraftCards = this.isDraftCard(deck.agenda) || allCards.some(cardQuantity => this.isDraftCard(cardQuantity.card));
+        let includesDraftCards = this.isDraftCard(agenda) || allCards.some(cardQuantity => this.isDraftCard(cardQuantity.card));
 
         if(includesDraftCards) {
             errors.push('You cannot include Draft cards in a normal deck');
@@ -335,11 +341,12 @@ class DeckValidator {
     }
 
     getAgendaRules(deck) {
-        if(!deck.agenda) {
+        let agenda = getAgenda(deck);
+        if(!agenda) {
             return [];
         }
 
-        let allAgendas = [deck.agenda].concat(deck.bannerCards || []);
+        let allAgendas = [agenda].concat(deck.cards.filter(c => c.card.traits.includes('Banner') && c.card !== agenda).map(c => c.card));
         return allAgendas.map(agenda => agendaRules[agenda.code]).filter(a => !!a);
     }
 
