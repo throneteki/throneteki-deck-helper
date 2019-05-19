@@ -12,6 +12,14 @@ function getDeckCount(deck) {
     return count;
 }
 
+function hasKeyword(card, keywordRegex) {
+    let lines = card.text.split('\n');
+    let keywordLine = lines[0] || '';
+    let keywords = keywordLine.split('.').map(keyword => keyword.trim()).filter(keyword => keyword.length !== 0);
+
+    return keywords.some(keyword => keywordRegex.test(keyword));
+}
+
 function hasTrait(card, trait) {
     return card.traits.some(t => t.toLowerCase() === trait.toLowerCase());
 }
@@ -160,6 +168,10 @@ const agendaRules = {
     // The Free Folk
     '11079': {
         cannotInclude: card => card.faction !== 'neutral'
+    },
+    // Kingdom of Shadows
+    '13079': {
+        mayInclude: card => !card.loyal && hasKeyword(card, /Shadow \(\d+\)/)
     },
     // Draft Agendas
     // The Power of Wealth
