@@ -173,6 +173,19 @@ const agendaRules = {
     '13079': {
         mayInclude: card => !card.loyal && hasKeyword(card, /Shadow \(\d+\)/)
     },
+    // The White Book
+    '13099': {
+        mayInclude: card => card.type === 'character' && hasTrait(card, 'Kingsguard') && !card.loyal,
+        rules: [
+            {
+                message: 'Must contain 7 or more different Kingsguard characters',
+                condition: deck => {
+                    const kingsguardChars = deck.drawCards.filter(cardQuantity => cardQuantity.card.type === 'character' && hasTrait(cardQuantity.card, 'Kingsguard'));
+                    return kingsguardChars.length >= 7;
+                }
+            }
+        ]
+    },
     // Draft Agendas
     // The Power of Wealth
     '00001': rulesForDraft({
