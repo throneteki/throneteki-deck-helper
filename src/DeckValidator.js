@@ -186,6 +186,21 @@ const agendaRules = {
             }
         ]
     },
+    // Valyrian Steel
+    '13118': {
+        requiredDraw: 75,
+        rules: [
+            {
+                message: 'Cannot include more than 1 copy of each attachment (by title)',
+                condition: deck => {
+                    const attachmentNames = deck.drawCards.filter(cardQuantity => cardQuantity.card.type === 'attachment').map(cardQuantity => cardQuantity.card.name);
+                    return attachmentNames.every(attachmentName => {
+                        return getDeckCount(deck.drawCards.filter(cardQuantity => cardQuantity.card.name === attachmentName)) <= 1;
+                    });
+                }
+            }
+        ]
+    },
     // Draft Agendas
     // The Power of Wealth
     '00001': rulesForDraft({
