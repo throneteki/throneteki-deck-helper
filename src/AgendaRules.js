@@ -168,13 +168,34 @@ const agendaRules = {
             {
                 message: 'Cannot include more than 1 copy of each attachment (by title)',
                 condition: deck => {
-                    const attachmentNames = deck.drawCards.filter(cardQuantity => cardQuantity.card.type === 'attachment').map(cardQuantity => cardQuantity.card.name);
+                    const allCards = deck.drawCards.concat(deck.plotCards);
+                    const attachmentNames = allCards.filter(cardQuantity => cardQuantity.card.type === 'attachment').map(cardQuantity => cardQuantity.card.name);
                     return attachmentNames.every(attachmentName => {
-                        return getDeckCount(deck.drawCards.filter(cardQuantity => cardQuantity.card.name === attachmentName)) <= 1;
+                        return getDeckCount(allCards.filter(cardQuantity => cardQuantity.card.name === attachmentName)) <= 1;
                     });
                 }
             }
         ]
+    },
+    // Dark Wings, Dark Words
+    '16028': {
+        requiredDraw: 75,
+        rules: [
+            {
+                message: 'Cannot include more than 1 copy of each event (by title)',
+                condition: deck => {
+                    const allCards = deck.drawCards.concat(deck.plotCards);
+                    const eventNames = allCards.filter(cardQuantity => cardQuantity.card.type === 'event').map(cardQuantity => cardQuantity.card.name);
+                    return eventNames.every(eventName => {
+                        return getDeckCount(allCards.filter(cardQuantity => cardQuantity.card.name === eventName)) <= 1;
+                    });
+                }
+            }
+        ]
+    },
+    // The Long Voyage
+    '16030': {
+        requiredDraw: 100
     },
     // Draft Agendas
     // The Power of Wealth
