@@ -13,6 +13,7 @@ The returned object breaks down any problems with the specified deck in the foll
 * `basicRules` - boolean specifying whether standard faction and agenda rules were obeyed.
 * `faqJoustRules` - boolean specifying whether the deck adheres to Joust format restrictions of the FAQ.
 * `faqVersion` - which version of the FAQ was checked
+* `noBannedCards` - boolean specifying whether any cards in the deck appear on the current ban list.
 * `noUnreleasedCards` - boolean specifying whether any cards in the deck haven't been released yet.
 * `extendedStatus` - array of user-presentable error messages related to validation.
 

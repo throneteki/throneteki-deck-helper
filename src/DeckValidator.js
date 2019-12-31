@@ -122,6 +122,7 @@ class DeckValidator {
             basicRules: errors.length === 0,
             faqJoustRules: restrictedResult.validForJoust,
             faqVersion: restrictedResult.version,
+            noBannedCards: restrictedResult.noBannedCards,
             noUnreleasedCards: unreleasedCards.length === 0,
             plotCount: plotCount,
             drawCount: drawCount,
