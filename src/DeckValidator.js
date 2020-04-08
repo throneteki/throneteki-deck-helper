@@ -111,7 +111,8 @@ class DeckValidator {
             uniqueCards.push(deck.agenda);
         }
 
-        let restrictedResult = this.restrictedList.validate(uniqueCards);
+        let officialRestrictedResult = this.restrictedList.validate(uniqueCards, 'Official FAQ');
+        let worldcupRestrictedResult = this.restrictedList.validate(uniqueCards, 'Worldcup');
         let includesDraftCards = this.isDraftCard(deck.agenda) || allCards.some(cardQuantity => this.isDraftCard(cardQuantity.card));
 
         if(includesDraftCards) {
@@ -120,13 +121,16 @@ class DeckValidator {
 
         return {
             basicRules: errors.length === 0,
-            faqJoustRules: restrictedResult.validForJoust,
-            faqVersion: restrictedResult.version,
-            noBannedCards: restrictedResult.noBannedCards,
+            faqJoustRules: officialRestrictedResult.validForJoust,
+            faqVersion: officialRestrictedResult.version,
+            noBannedCards: officialRestrictedResult.noBannedCards,
+            worldcupJoustRules: worldcupRestrictedResult.validForJoust,
+            worldcupVersion: worldcupRestrictedResult.version,
+            worldcupNoBannedCards: worldcupRestrictedResult.noBannedCards,
             noUnreleasedCards: unreleasedCards.length === 0,
             plotCount: plotCount,
             drawCount: drawCount,
-            extendedStatus: errors.concat(unreleasedCards).concat(restrictedResult.errors)
+            extendedStatus: errors.concat(unreleasedCards).concat(officialRestrictedResult.errors).concat(worldcupRestrictedResult.errors)
         };
     }
 

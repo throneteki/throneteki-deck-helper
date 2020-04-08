@@ -5,22 +5,23 @@ class RestrictedList {
         this.rules = rules;
     }
 
-    validate(cards) {
-        let currentRules = this.getCurrentRules();
+    validate(cards, category) {
+        let currentRules = this.getCurrentRulesForCategory(category);
         let joustCardsOnList = cards.filter(card => currentRules.joustCards.includes(card.code));
         let bannedCardsOnList = cards.filter(card => currentRules.bannedCards.includes(card.code));
 
         let errors = [];
 
         if(joustCardsOnList.length > 1) {
-            errors.push(`Contains more than 1 card on the FAQ v${currentRules.version} Joust restricted list: ${joustCardsOnList.map(card => card.name).join(', ')}`);
+            errors.push(`${category} v${currentRules.version}: Contains more than 1 card on the Joust restricted list: ${joustCardsOnList.map(card => card.name).join(', ')}`);
         }
 
         if(bannedCardsOnList.length > 0) {
-            errors.push(`Contains cards that are not tournament legal: ${bannedCardsOnList.map(card => card.name).join(', ')}`);
+            errors.push(`${category} v${currentRules.version}: Contains cards that are not tournament legal: ${bannedCardsOnList.map(card => card.name).join(', ')}`);
         }
 
         return {
+            category: category,
             version: currentRules.version,
             valid: errors.length === 0,
             validForJoust: joustCardsOnList.length <= 1,
@@ -31,9 +32,10 @@ class RestrictedList {
         };
     }
 
-    getCurrentRules() {
+    getCurrentRulesForCategory(category) {
         let now = moment();
-        return this.rules.reduce((max, list) => {
+        let filteredRules = this.rules.filter(rule => rule.category === category);
+        return filteredRules.reduce((max, list) => {
             let effectiveDate = moment(list.date, 'YYYY-MM-DD');
             if(effectiveDate <= now && effectiveDate > moment(max.date, 'YYYY-MM-DD')) {
                 return list;
