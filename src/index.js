@@ -8,7 +8,7 @@ module.exports = {
     validateDeck: function(deck, options) {
         options = Object.assign({ includeExtendedStatus: true }, options);
 
-        let validator = new DeckValidator(options.packs, options.restrictedList);
+        let validator = new DeckValidator(options.packs, options.restrictedLists);
         let result = validator.validateDeck(deck);
 
         if(!options.includeExtendedStatus) {

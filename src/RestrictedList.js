@@ -6,41 +6,28 @@ class RestrictedList {
     }
 
     validate(cards) {
-        let currentRules = this.getCurrentRules();
-        let joustCardsOnList = cards.filter(card => currentRules.joustCards.includes(card.code));
-        let bannedCardsOnList = cards.filter(card => currentRules.bannedCards.includes(card.code));
+        let restrictedCardsOnList = cards.filter(card => this.rules.restricted.includes(card.code));
+        let bannedCardsOnList = cards.filter(card => this.rules.banned.includes(card.code));
 
         let errors = [];
 
-        if(joustCardsOnList.length > 1) {
-            errors.push(`Contains more than 1 card on the FAQ v${currentRules.version} Joust restricted list: ${joustCardsOnList.map(card => card.name).join(', ')}`);
+        if(restrictedCardsOnList.length > 1) {
+            errors.push(`${this.rules.name}: Contains more than 1 card on the restricted list: ${restrictedCardsOnList.map(card => card.name).join(', ')}`);
         }
 
         if(bannedCardsOnList.length > 0) {
-            errors.push(`Contains cards that are not tournament legal: ${bannedCardsOnList.map(card => card.name).join(', ')}`);
+            errors.push(`${this.rules.name}: Contains cards that are not tournament legal: ${bannedCardsOnList.map(card => card.name).join(', ')}`);
         }
 
         return {
-            version: currentRules.version,
+            name: this.rules.name,
             valid: errors.length === 0,
-            validForJoust: joustCardsOnList.length <= 1,
+            restrictedRules: restrictedCardsOnList.length <= 1,
             noBannedCards: bannedCardsOnList.length === 0,
             errors: errors,
-            joustCards: joustCardsOnList,
+            restrictedCards: restrictedCardsOnList,
             bannedCards: bannedCardsOnList
         };
-    }
-
-    getCurrentRules() {
-        let now = moment();
-        return this.rules.reduce((max, list) => {
-            let effectiveDate = moment(list.date, 'YYYY-MM-DD');
-            if(effectiveDate <= now && effectiveDate > moment(max.date, 'YYYY-MM-DD')) {
-                return list;
-            }
-
-            return max;
-        });
     }
 }
 
