@@ -37,7 +37,8 @@ function isCardInReleasedPack(packs, card) {
 class DeckValidator {
     constructor(packs, restrictedListRules) {
         this.packs = packs;
-        this.restrictedList = new RestrictedList(restrictedListRules);
+
+        this.restrictedLists = restrictedListRules.map(rl => new RestrictedList(rl));
     }
 
     validateDeck(deck) {
@@ -111,22 +112,26 @@ class DeckValidator {
             uniqueCards.push(deck.agenda);
         }
 
-        let restrictedResult = this.restrictedList.validate(uniqueCards);
+        let restrictedListResults = this.restrictedLists.map(restrictedList => restrictedList.validate(uniqueCards));
+        let officialRestrictedResult = restrictedListResults[0];
         let includesDraftCards = this.isDraftCard(deck.agenda) || allCards.some(cardQuantity => this.isDraftCard(cardQuantity.card));
 
         if(includesDraftCards) {
             errors.push('You cannot include Draft cards in a normal deck');
         }
 
+        const restrictedListErrors = restrictedListResults.reduce((errors, result) => errors.concat(result.errors), []);
+
         return {
             basicRules: errors.length === 0,
-            faqJoustRules: restrictedResult.validForJoust,
-            faqVersion: restrictedResult.version,
-            noBannedCards: restrictedResult.noBannedCards,
+            faqJoustRules: officialRestrictedResult.restrictedRules,
+            faqVersion: officialRestrictedResult.version,
+            noBannedCards: officialRestrictedResult.noBannedCards,
+            restrictedLists: restrictedListResults,
             noUnreleasedCards: unreleasedCards.length === 0,
             plotCount: plotCount,
             drawCount: drawCount,
-            extendedStatus: errors.concat(unreleasedCards).concat(restrictedResult.errors)
+            extendedStatus: errors.concat(unreleasedCards).concat(restrictedListErrors)
         };
     }
 
