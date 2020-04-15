@@ -37,7 +37,8 @@ function isCardInReleasedPack(packs, card) {
 class DeckValidator {
     constructor(packs, restrictedListRules) {
         this.packs = packs;
-        this.restrictedList = new RestrictedList(restrictedListRules);
+
+        this.restrictedLists = restrictedListRules.map(rl => new RestrictedList(rl));
     }
 
     validateDeck(deck) {
@@ -111,26 +112,26 @@ class DeckValidator {
             uniqueCards.push(deck.agenda);
         }
 
-        let officialRestrictedResult = this.restrictedList.validate(uniqueCards, 'Official FAQ');
-        let worldcupRestrictedResult = this.restrictedList.validate(uniqueCards, 'Worldcup');
+        let restrictedListResults = this.restrictedLists.map(restrictedList => restrictedList.validate(uniqueCards));
+        let officialRestrictedResult = restrictedListResults[0];
         let includesDraftCards = this.isDraftCard(deck.agenda) || allCards.some(cardQuantity => this.isDraftCard(cardQuantity.card));
 
         if(includesDraftCards) {
             errors.push('You cannot include Draft cards in a normal deck');
         }
 
+        const restrictedListErrors = restrictedListResults.reduce((errors, result) => errors.concat(result.errors), []);
+
         return {
             basicRules: errors.length === 0,
-            faqJoustRules: officialRestrictedResult.validForJoust,
+            faqJoustRules: officialRestrictedResult.restrictedRules,
             faqVersion: officialRestrictedResult.version,
             noBannedCards: officialRestrictedResult.noBannedCards,
-            worldcupJoustRules: worldcupRestrictedResult.validForJoust,
-            worldcupVersion: worldcupRestrictedResult.version,
-            worldcupNoBannedCards: worldcupRestrictedResult.noBannedCards,
+            restrictedLists: restrictedListResults,
             noUnreleasedCards: unreleasedCards.length === 0,
             plotCount: plotCount,
             drawCount: drawCount,
-            extendedStatus: errors.concat(unreleasedCards).concat(officialRestrictedResult.errors).concat(worldcupRestrictedResult.errors)
+            extendedStatus: errors.concat(unreleasedCards).concat(restrictedListErrors)
         };
     }
 
