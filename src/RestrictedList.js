@@ -7,6 +7,7 @@ class RestrictedList {
     validate(cards) {
         let restrictedCardsOnList = cards.filter(card => this.rules.restricted.includes(card.code));
         let bannedCardsOnList = cards.filter(card => this.rules.banned.includes(card.code));
+        let noBannedCards = true;
 
         let errors = [];
 
@@ -15,18 +16,21 @@ class RestrictedList {
         }
 
         if(bannedCardsOnList.length > 0) {
+            noBannedCards = false;
             errors.push(`${this.rules.name}: Contains cards that are not tournament legal: ${bannedCardsOnList.map(card => card.name).join(', ')}`);
         }
 
         for(const pod of this.pods) {
-            errors = errors.concat(this.validateRestrictedPods({ pod, cards }));
+            const podErrors = this.validateRestrictedPods({ pod, cards });
+            noBannedCards = noBannedCards && podErrors.length === 0;
+            errors = errors.concat(podErrors);
         }
 
         return {
             name: this.rules.name,
             valid: errors.length === 0,
             restrictedRules: restrictedCardsOnList.length <= 1,
-            noBannedCards: bannedCardsOnList.length === 0,
+            noBannedCards: noBannedCards,
             errors: errors,
             restrictedCards: restrictedCardsOnList,
             bannedCards: bannedCardsOnList
