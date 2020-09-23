@@ -142,7 +142,23 @@ const agendaRules = {
     },
     // The Free Folk
     '11079': {
-        cannotInclude: card => card.faction !== 'neutral'
+        mayInclude: card => card.faction !== 'neutral' && card.type === 'character' && !card.loyal && hasTrait(card, 'Wildling'),
+        rules: [{
+            message: 'Must only contain neutral cards or Non-loyal Wildling characters',
+            condition: function condition(deck) {
+                let drawDeckValid = !deck.drawCards.some(function (cardQuantity) {
+                    return cardQuantity.card.faction !== 'neutral' && !(cardQuantity.card.type === 'character' && !cardQuantity.card.loyal && hasTrait(cardQuantity.card, 'Wildling'));
+                });
+                let plotDeckValid = !deck.plotCards.some(function (cardQuantity) {
+                    return cardQuantity.card.faction !== 'neutral';
+                });
+                return drawDeckValid && plotDeckValid;
+            }
+        }]
+    },
+    // Sea of Blood
+    '12045': {
+        cannotInclude: card => card.faction === 'neutral' && card.type === 'event'
     },
     // Kingdom of Shadows
     '13079': {
