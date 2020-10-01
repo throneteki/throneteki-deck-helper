@@ -142,23 +142,7 @@ const agendaRules = {
     },
     // The Free Folk
     '11079': {
-        mayInclude: card => card.faction !== 'neutral' && card.type === 'character' && !card.loyal && hasTrait(card, 'Wildling'),
-        rules: [{
-            message: 'Must only contain neutral cards or Non-loyal Wildling characters',
-            condition: function condition(deck) {
-                let drawDeckValid = !deck.drawCards.some(function (cardQuantity) {
-                    return cardQuantity.card.faction !== 'neutral' && !(cardQuantity.card.type === 'character' && !cardQuantity.card.loyal && hasTrait(cardQuantity.card, 'Wildling'));
-                });
-                let plotDeckValid = !deck.plotCards.some(function (cardQuantity) {
-                    return cardQuantity.card.faction !== 'neutral';
-                });
-                return drawDeckValid && plotDeckValid;
-            }
-        }]
-    },
-    // Sea of Blood
-    '12045': {
-        cannotInclude: card => card.faction === 'neutral' && card.type === 'event'
+        cannotInclude: card => card.faction !== 'neutral'
     },
     // Kingdom of Shadows
     '13079': {
@@ -212,6 +196,26 @@ const agendaRules = {
     // The Long Voyage
     '16030': {
         requiredDraw: 100
+    },
+    // Sea of Blood
+    '17149': {
+        cannotInclude: card => card.faction === 'neutral' && card.type === 'event'
+    },
+    // The Free Folk
+    '17150': {
+        mayInclude: card => card.faction !== 'neutral' && card.type === 'character' && !card.loyal && hasTrait(card, 'Wildling'),
+        rules: [{
+            message: 'Must only contain neutral cards or Non-loyal Wildling characters',
+            condition: function condition(deck) {
+                let drawDeckValid = !deck.drawCards.some(function (cardQuantity) {
+                    return cardQuantity.card.faction !== 'neutral' && !(cardQuantity.card.type === 'character' && !cardQuantity.card.loyal && hasTrait(cardQuantity.card, 'Wildling'));
+                });
+                let plotDeckValid = !deck.plotCards.some(function (cardQuantity) {
+                    return cardQuantity.card.faction !== 'neutral';
+                });
+                return drawDeckValid && plotDeckValid;
+            }
+        }]
     },
     // Draft Agendas
     // The Power of Wealth
