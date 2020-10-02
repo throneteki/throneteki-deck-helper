@@ -197,11 +197,15 @@ const agendaRules = {
     '16030': {
         requiredDraw: 100
     },
-    // Sea of Blood
+    // Kingdom of Shadows (Redesign)
+    '17148': {
+        mayInclude: card => !card.loyal && hasKeyword(card, /Shadow \(\d+\)/)
+    },
+    // Sea of Blood (Redesign)
     '17149': {
         cannotInclude: card => card.faction === 'neutral' && card.type === 'event'
     },
-    // The Free Folk
+    // The Free Folk (Redesign)
     '17150': {
         mayInclude: card => card.faction !== 'neutral' && card.type === 'character' && !card.loyal && hasTrait(card, 'Wildling'),
         rules: [{
@@ -216,6 +220,20 @@ const agendaRules = {
                 return drawDeckValid && plotDeckValid;
             }
         }]
+    },
+    // Valyrian Steel (Redesign)
+    '17152': {
+        requiredDraw: 75,
+        rules: [
+            {
+                message: 'Cannot include more than 1 copy of each attachment',
+                condition: deck => {
+                    const allCards = deck.drawCards.concat(deck.plotCards);
+                    const attachments = allCards.filter(cardQuantity => cardQuantity.card.type === 'attachment');
+                    return attachments.every(attachment => attachment.count <= 1);
+                }
+            }
+        ]
     },
     // Draft Agendas
     // The Power of Wealth
