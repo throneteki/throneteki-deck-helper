@@ -221,6 +221,11 @@ const agendaRules = {
             }
         }]
     },
+    // The Wars To Come (Redesign)
+    '17051': {
+        requiredPlots: 10,
+        maxDoubledPlots: 2
+    },
     // Valyrian Steel (Redesign)
     '17152': {
         requiredDraw: 75,
