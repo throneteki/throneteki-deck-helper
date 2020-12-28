@@ -21,7 +21,7 @@ class RestrictedList {
         }
 
         for(const pod of this.pods) {
-            const podErrors = this.validateRestrictedPods({ pod, cards });
+            const podErrors = pod.restricted ? this.validateRestrictedPods({ pod, cards }) : this.validateAnyCardPod({ pod, cards });
             noBannedCards = noBannedCards && podErrors.length === 0;
             errors = errors.concat(podErrors);
         }
@@ -49,6 +49,17 @@ class RestrictedList {
         const cardsOnList = cards.filter(card => pod.cards.includes(card.code));
         if(cardsOnList.length > 0) {
             errors.push(`${this.rules.name}: ${cardsOnList.map(card => card.name).join(', ')} cannot be used with ${restrictedCard.name}`);
+        }
+
+        return errors;
+    }
+
+    validateAnyCardPod({ pod, cards }) {
+        const errors = [];
+
+        const cardsOnList = cards.filter(card => pod.cards.includes(card.code));
+        if(cardsOnList.length > 1) {
+            errors.push(`${this.rules.name}: ${cardsOnList.map(card => card.name).join(', ')} cannot be used together`);
         }
 
         return errors;
