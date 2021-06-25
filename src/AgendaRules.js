@@ -240,6 +240,14 @@ const agendaRules = {
             }
         ]
     },
+    // A Mummer's Farce
+    '20051': {
+        mayInclude: card => card.type === 'character' && hasTrait(card, 'Fool') && !card.loyal
+    },
+    // The Many-Faced God
+    '20052': {
+        cannotInclude: card => card.type === 'plot' && hasTrait(card, 'Kingdom')
+    },
     // Draft Agendas
     // The Power of Wealth
     '00001': rulesForDraft({
