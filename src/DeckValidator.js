@@ -86,12 +86,6 @@ class DeckValidator {
         let uniqueCards = deck.getUniqueCards();
         let restrictedListResults = this.restrictedLists.map(restrictedList => restrictedList.validate(uniqueCards));
         let officialRestrictedResult = restrictedListResults[0];
-        let includesDraftCards = uniqueCards.some(card => this.isDraftCard(card));
-
-        if(includesDraftCards) {
-            errors.push('You cannot include Draft cards in a normal deck');
-        }
-
         const restrictedListErrors = restrictedListResults.reduce((errors, result) => errors.concat(result.errors), []);
 
         return {
@@ -111,7 +105,16 @@ class DeckValidator {
         const standardRules = {
             requiredDraw: 60,
             requiredPlots: 7,
-            maxDoubledPlots: 1
+            maxDoubledPlots: 1,
+            cannotInclude: card => card.packCode === 'VDS',
+            rules: [
+                {
+                    message: 'You cannot include Draft cards in a normal deck',
+                    condition: deck => {
+                        return deck.getUniqueCards().every(card => card.packCode !== 'VDS');
+                    }
+                }
+            ]
         };
 
         let factionRules = this.getFactionRules(deck.faction.value.toLowerCase());
