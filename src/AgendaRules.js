@@ -1,13 +1,3 @@
-function getDeckCount(deck) {
-    let count = 0;
-
-    for(const cardEntry of deck) {
-        count += cardEntry.count;
-    }
-
-    return count;
-}
-
 function hasKeyword(card, keywordRegex) {
     let lines = card.text.split('\n');
     let keywordLine = lines[0] || '';
@@ -26,7 +16,7 @@ function rulesForBanner(faction, factionName) {
         rules: [
             {
                 message: 'Must contain 12 or more ' + factionName + ' cards',
-                condition: deck => getDeckCount(deck.drawCards.filter(cardQuantity => cardQuantity.card.faction === faction)) >= 12
+                condition: deck => deck.countDrawCards(card => card.faction === faction) >= 12
             }
         ]
     };
@@ -64,7 +54,7 @@ const agendaRules = {
         rules: [
             {
                 message: 'You cannot include more than 15 neutral cards in a deck with Fealty',
-                condition: deck => getDeckCount(deck.drawCards.filter(cardEntry => cardEntry.card.faction === 'neutral')) <= 15
+                condition: deck => deck.countDrawCards(card => card.faction === 'neutral') <= 15
             }
         ]
     },
@@ -95,8 +85,9 @@ const agendaRules = {
             {
                 message: 'Rains of Castamere must contain exactly 5 different Scheme plots',
                 condition: deck => {
-                    let schemePlots = deck.plotCards.filter(cardQuantity => hasTrait(cardQuantity.card, 'Scheme'));
-                    return schemePlots.length === 5 && getDeckCount(schemePlots) === 5;
+                    const isScheme = card => hasTrait(card, 'Scheme');
+                    let schemePlots = deck.plotCards.filter(cardQuantity => isScheme(cardQuantity.card));
+                    return schemePlots.length === 5 && deck.countPlotCards(isScheme) === 5;
                 }
             }
         ]
@@ -127,7 +118,7 @@ const agendaRules = {
         rules: [
             {
                 message: 'Must contain 12 or more Maester characters',
-                condition: deck => getDeckCount(deck.drawCards.filter(cardQuantity => cardQuantity.card.type === 'character' && hasTrait(cardQuantity.card, 'Maester'))) >= 12
+                condition: deck => deck.countDrawCards(card => card.type === 'character' && hasTrait(card, 'Maester')) >= 12
             }
         ]
     },
@@ -167,7 +158,7 @@ const agendaRules = {
                     const allCards = deck.drawCards.concat(deck.plotCards);
                     const attachmentNames = allCards.filter(cardQuantity => cardQuantity.card.type === 'attachment').map(cardQuantity => cardQuantity.card.name);
                     return attachmentNames.every(attachmentName => {
-                        return getDeckCount(allCards.filter(cardQuantity => cardQuantity.card.name === attachmentName)) <= 1;
+                        return deck.countCards(card => card.name === attachmentName) <= 1;
                     });
                 }
             }
@@ -183,7 +174,7 @@ const agendaRules = {
                     const allCards = deck.drawCards.concat(deck.plotCards);
                     const eventNames = allCards.filter(cardQuantity => cardQuantity.card.type === 'event').map(cardQuantity => cardQuantity.card.name);
                     return eventNames.every(eventName => {
-                        return getDeckCount(allCards.filter(cardQuantity => cardQuantity.card.name === eventName)) <= 1;
+                        return deck.countCards(card => card.name === eventName) <= 1;
                     });
                 }
             }

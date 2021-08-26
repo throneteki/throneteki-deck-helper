@@ -1,17 +1,9 @@
 const moment = require('moment');
 
 const AgendaRules = require('./AgendaRules');
+const DeckWrapper = require('./DeckWrapper');
+const Formats = require('./Formats');
 const RestrictedList = require('./RestrictedList');
-
-function getDeckCount(deck) {
-    let count = 0;
-
-    for(const cardEntry of deck) {
-        count += cardEntry.count;
-    }
-
-    return count;
-}
 
 function isCardInReleasedPack(packs, card) {
     let pack = packs.find(pack => {
@@ -41,12 +33,14 @@ class DeckValidator {
         this.restrictedLists = restrictedListRules.map(rl => new RestrictedList(rl));
     }
 
-    validateDeck(deck) {
+    validateDeck(rawDeck) {
+        const deck = new DeckWrapper(rawDeck);
+
         let errors = [];
         let unreleasedCards = [];
         let rules = this.getRules(deck);
-        let plotCount = getDeckCount(deck.plotCards);
-        let drawCount = getDeckCount(deck.drawCards);
+        let plotCount = deck.countPlotCards();
+        let drawCount = deck.countDrawCards();
 
         if(plotCount < rules.requiredPlots) {
             errors.push('Too few plot cards');
@@ -64,34 +58,18 @@ class DeckValidator {
             }
         }
 
-        let allCards = deck.plotCards.concat(deck.drawCards);
-        let cardCountByName = {};
+        let cardCountByName = deck.getCardCountsByName();
 
-        for(let cardQuantity of allCards) {
-            cardCountByName[cardQuantity.card.name] = cardCountByName[cardQuantity.card.name] || { name: cardQuantity.card.name, type: cardQuantity.card.type, limit: cardQuantity.card.deckLimit, count: 0 };
-            cardCountByName[cardQuantity.card.name].count += cardQuantity.count;
-        }
-
-        for(let card of deck.bannerCards || []) {
-            cardCountByName[card.name] = cardCountByName[card.name] || { name: card.name, type: card.type, limit: card.deckLimit, count: 0 };
-            cardCountByName[card.name].count += 1;
-        }
-
-        // Only add rookery cards here as they don't count towards deck limits
-        allCards = allCards.concat(deck.rookeryCards || []);
-
-        for(const cardQuantity of allCards) {
-            if(!rules.mayInclude(cardQuantity.card) || rules.cannotInclude(cardQuantity.card)) {
-                errors.push(cardQuantity.card.label + ' is not allowed by faction or agenda');
-            }
-
-            if(!isCardInReleasedPack(this.packs, cardQuantity.card)) {
-                unreleasedCards.push(cardQuantity.card.label + ' is not yet released');
+        for(const card of deck.getCardsIncludedInDeck()) {
+            if(!rules.mayInclude(card) || rules.cannotInclude(card)) {
+                errors.push(card.label + ' is not allowed by faction or agenda');
             }
         }
 
-        if(deck.agenda && !isCardInReleasedPack(this.packs, deck.agenda)) {
-            unreleasedCards.push(deck.agenda.label + ' is not yet released');
+        for(const card of deck.getUniqueCards()) {
+            if(!isCardInReleasedPack(this.packs, card)) {
+                unreleasedCards.push(card.label + ' is not yet released');
+            }
         }
 
         let doubledPlots = Object.values(cardCountByName).filter(card => card.type === 'plot' && card.count === 2);
@@ -105,16 +83,10 @@ class DeckValidator {
             }
         }
 
-        let uniqueCards = allCards.map(cardQuantity => cardQuantity.card).concat(deck.bannerCards);
-
-        // Ensure agenda cards are validated against the restricted list
-        if(deck.agenda) {
-            uniqueCards.push(deck.agenda);
-        }
-
+        let uniqueCards = deck.getUniqueCards();
         let restrictedListResults = this.restrictedLists.map(restrictedList => restrictedList.validate(uniqueCards));
         let officialRestrictedResult = restrictedListResults[0];
-        let includesDraftCards = this.isDraftCard(deck.agenda) || allCards.some(cardQuantity => this.isDraftCard(cardQuantity.card));
+        let includesDraftCards = uniqueCards.some(card => this.isDraftCard(card));
 
         if(includesDraftCards) {
             errors.push('You cannot include Draft cards in a normal deck');
@@ -155,13 +127,13 @@ class DeckValidator {
                 {
                     message: 'More than 2 plot cards in rookery',
                     condition: deck => {
-                        return !deck.rookeryCards || getDeckCount(deck.rookeryCards.filter(card => card.card.type === 'plot')) <= 2;
+                        return deck.countRookeryCards(card => card.type === 'plot') <= 2;
                     }
                 },
                 {
                     message: 'More than 10 draw cards in rookery',
                     condition: deck => {
-                        return !deck.rookeryCards || getDeckCount(deck.rookeryCards.filter(card => card.card.type !== 'plot')) <= 10;
+                        return deck.countRookeryCards(card => card.type !== 'plot') <= 10;
                     }
                 }
             ]
@@ -175,12 +147,7 @@ class DeckValidator {
     }
 
     getAgendaRules(deck) {
-        if(!deck.agenda) {
-            return [];
-        }
-
-        let allAgendas = [deck.agenda].concat(deck.bannerCards || []);
-        return allAgendas.map(agenda => AgendaRules[agenda.code]).filter(a => !!a);
+        return deck.agendas.map(agenda => AgendaRules[agenda.code]).filter(a => !!a);
     }
 
     combineValidationRules(validators) {
