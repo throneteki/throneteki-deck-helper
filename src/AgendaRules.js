@@ -32,10 +32,6 @@ function rulesForBanner(faction, factionName) {
     };
 }
 
-function rulesForDraft(properties) {
-    return Object.assign({ requiredDraw: 40, requiredPlots: 5 }, properties);
-}
-
 /**
  * Validation rule structure is as follows. All fields are optional.
  *
@@ -250,7 +246,7 @@ const agendaRules = {
     },
     // Draft Agendas
     // The Power of Wealth
-    '00001': rulesForDraft({
+    '00001': {
         mayInclude: () => true,
         rules: [
             {
@@ -262,13 +258,13 @@ const agendaRules = {
                 }
             }
         ]
-    }),
+    },
     // Protectors of the Realm
-    '00002': rulesForDraft({
+    '00002': {
         mayInclude: card => card.type === 'character' && (hasTrait(card, 'Knight') || hasTrait(card, 'Army'))
-    }),
+    },
     // Treaty
-    '00003': rulesForDraft({
+    '00003': {
         mayInclude: () => true,
         rules: [
             {
@@ -280,11 +276,11 @@ const agendaRules = {
                 }
             }
         ]
-    }),
+    },
     // Uniting the Seven Kingdoms
-    '00004': rulesForDraft({
+    '00004': {
         mayInclude: card => card.type !== 'plot'
-    })
+    }
 };
 
 module.exports = agendaRules;
