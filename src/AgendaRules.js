@@ -244,8 +244,8 @@ const agendaRules = {
                 message: 'Cannot include cards from more than 1 outside faction',
                 condition: deck => {
                     let outOfFactionCards = deck.drawCards.concat(deck.plotCards).filter(cardQuantity => cardQuantity.card.faction !== deck.faction.value && cardQuantity.card.faction !== 'neutral');
-                    let factions = outOfFactionCards.map(cardQuantity => cardQuantity.card.faction);
-                    return factions.length <= 1;
+                    let factions = new Set(outOfFactionCards.map(cardQuantity => cardQuantity.card.faction));
+                    return factions.size <= 1;
                 }
             }
         ]
@@ -262,8 +262,8 @@ const agendaRules = {
                 message: 'Cannot include cards from more than 2 outside factions',
                 condition: deck => {
                     let outOfFactionCards = deck.drawCards.concat(deck.plotCards).filter(cardQuantity => cardQuantity.card.faction !== deck.faction.value && cardQuantity.card.faction !== 'neutral');
-                    let factions = outOfFactionCards.map(cardQuantity => cardQuantity.card.faction);
-                    return factions.length <= 2;
+                    let factions = new Set(outOfFactionCards.map(cardQuantity => cardQuantity.card.faction));
+                    return factions.size <= 2;
                 }
             }
         ]
