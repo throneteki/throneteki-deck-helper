@@ -2,6 +2,7 @@ class DeckWrapper {
     constructor(rawDeck) {
         this.agenda = rawDeck.agenda;
         this.bannerCards = rawDeck.bannerCards || [];
+        this.draftedCards = rawDeck.draftedCards || [];
         this.drawCards = rawDeck.drawCards;
         this.faction = rawDeck.faction;
         this.format = rawDeck.format || 'joust';

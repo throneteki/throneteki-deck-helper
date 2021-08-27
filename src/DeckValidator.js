@@ -53,7 +53,7 @@ class DeckValidator {
         }
 
         for(const rule of rules.rules) {
-            if(!rule.condition(deck)) {
+            if(!rule.condition(deck, errors)) {
                 errors.push(rule.message);
             }
         }
@@ -102,45 +102,11 @@ class DeckValidator {
     }
 
     getRules(deck) {
-        const standardRules = {
-            requiredDraw: 60,
-            requiredPlots: 7,
-            maxDoubledPlots: 1,
-            cannotInclude: card => card.packCode === 'VDS',
-            rules: [
-                {
-                    message: 'You cannot include Draft cards in a normal deck',
-                    condition: deck => {
-                        return deck.getUniqueCards().every(card => card.packCode !== 'VDS');
-                    }
-                }
-            ]
-        };
-
+        const formatRules = Formats.find(format => format.name === deck.format) || Formats.find(format => format.name === 'joust');
         let factionRules = this.getFactionRules(deck.faction.value.toLowerCase());
         let agendaRules = this.getAgendaRules(deck);
-        let rookeryRules = this.getRookeryRules(deck);
 
-        return this.combineValidationRules([standardRules, factionRules, rookeryRules].concat(agendaRules));
-    }
-
-    getRookeryRules() {
-        return {
-            rules: [
-                {
-                    message: 'More than 2 plot cards in rookery',
-                    condition: deck => {
-                        return deck.countRookeryCards(card => card.type === 'plot') <= 2;
-                    }
-                },
-                {
-                    message: 'More than 10 draw cards in rookery',
-                    condition: deck => {
-                        return deck.countRookeryCards(card => card.type !== 'plot') <= 10;
-                    }
-                }
-            ]
-        };
+        return this.combineValidationRules([formatRules, factionRules].concat(agendaRules));
     }
 
     getFactionRules(faction) {
