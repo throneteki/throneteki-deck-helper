@@ -8,7 +8,7 @@ const DraftFormat = {
             message: 'Includes cards that were not drafted',
             condition: (deck, errors) => {
                 const draftCardQuantityByCode = deck.draftedCards.reduce((quantityByCode, cardQuantity) => {
-                    quantityByCode.set(cardQuantity.card.code, cardQuantity.count);
+                    quantityByCode.set(cardQuantity.code, cardQuantity.count);
                     return quantityByCode;
                 }, new Map());
 
