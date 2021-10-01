@@ -10,6 +10,7 @@
 function formatDeckAsFullCards(deck, data) {
     let newDeck = {
         _id: deck._id,
+        format: deck.format,
         name: deck.name,
         username: deck.username,
         lastUpdated: deck.lastUpdated,
@@ -25,6 +26,7 @@ function formatDeckAsFullCards(deck, data) {
     }
 
     newDeck.bannerCards = (deck.bannerCards || []).map(card => data.cards[card.code]);
+    newDeck.draftedCards = (deck.draftedCards || []);
     newDeck.drawCards = processCardCounts(deck.drawCards || [], data.cards);
     newDeck.plotCards = processCardCounts(deck.plotCards || [], data.cards);
     newDeck.rookeryCards = processCardCounts(deck.rookeryCards || [], data.cards);

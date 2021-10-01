@@ -8,7 +8,8 @@ function formatDeckAsShortCards(deck) {
         name: deck.name,
         username: deck.username,
         lastUpdated: deck.lastUpdated,
-        faction: { name: deck.faction.name, value: deck.faction.value }
+        faction: { name: deck.faction.name, value: deck.faction.value },
+        format: deck.format
     };
 
     if(deck.agenda) {
