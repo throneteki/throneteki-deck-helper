@@ -5,6 +5,8 @@
 function formatDeckAsShortCards(deck) {
     let newDeck = {
         _id: deck._id,
+        draftCubeId: deck.draftCubeId,
+        eventId: deck.eventId,
         name: deck.name,
         username: deck.username,
         lastUpdated: deck.lastUpdated,

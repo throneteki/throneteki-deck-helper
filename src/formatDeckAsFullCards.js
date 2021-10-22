@@ -10,6 +10,8 @@
 function formatDeckAsFullCards(deck, data) {
     let newDeck = {
         _id: deck._id,
+        draftCubeId: deck.draftCubeId,
+        eventId: deck.eventId,
         format: deck.format,
         name: deck.name,
         username: deck.username,
