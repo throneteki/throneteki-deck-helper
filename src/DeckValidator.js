@@ -67,7 +67,7 @@ class DeckValidator {
 
         let uniqueCards = deck.getUniqueCards();
         let restrictedListResults = this.restrictedLists.map(restrictedList => restrictedList.validate(uniqueCards));
-        let officialRestrictedResult = restrictedListResults[0];
+        let officialRestrictedResult = restrictedListResults[0] || { noBannedCards: true, restrictedRules: true, version: '' };
         const restrictedListErrors = restrictedListResults.reduce((errors, result) => errors.concat(result.errors), []);
 
         return {
