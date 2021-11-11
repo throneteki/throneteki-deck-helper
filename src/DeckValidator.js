@@ -6,11 +6,12 @@ const Formats = require('./Formats');
 const RestrictedList = require('./RestrictedList');
 
 class DeckValidator {
-    constructor(packs, restrictedListRules) {
+    constructor(packs, restrictedListRules, customRules = {}) {
         const now = moment();
         this.releasedPackCodes = new Set(packs.filter(pack => pack.releaseDate && moment(pack.releaseDate, 'YYYY-MM-DD') <= now).map(pack => pack.code));
 
         this.restrictedLists = restrictedListRules.map(rl => new RestrictedList(rl));
+        this.customRules = customRules;
     }
 
     validateDeck(rawDeck) {
@@ -85,10 +86,11 @@ class DeckValidator {
 
     getRules(deck) {
         const formatRules = Formats.find(format => format.name === deck.format) || Formats.find(format => format.name === 'joust');
+        const customizedFormatRules = Object.assign({}, formatRules, this.customRules);
         let factionRules = this.getFactionRules(deck.faction.value.toLowerCase());
         let agendaRules = this.getAgendaRules(deck);
 
-        return this.combineValidationRules([formatRules, factionRules].concat(agendaRules));
+        return this.combineValidationRules([customizedFormatRules, factionRules].concat(agendaRules));
     }
 
     getFactionRules(faction) {
