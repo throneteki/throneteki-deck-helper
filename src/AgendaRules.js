@@ -235,6 +235,16 @@ const agendaRules = {
     '20052': {
         cannotInclude: card => card.type === 'plot' && hasTrait(card, 'Kingdom')
     },
+    // Battle of the Trident
+    '21030': {
+        requiredPlots: 10,
+        rules: [{
+            message: 'Battle of the Trident must contain exactly 10 Edict, Siege or War plots',
+            condition: deck => {
+                return deck.plotCards.every(cardQuantity => hasTrait(cardQuantity.card, 'Edict') || hasTrait(cardQuantity.card, 'Siege') || hasTrait(cardQuantity.card, 'War'));
+            }
+        }]
+    },
     // Draft Agendas
     // The Power of Wealth
     '00001': {
