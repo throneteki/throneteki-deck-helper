@@ -5,30 +5,10 @@ const DeckWrapper = require('./DeckWrapper');
 const Formats = require('./Formats');
 const RestrictedList = require('./RestrictedList');
 
-function isCardInReleasedPack(packs, card) {
-    let pack = packs.find(pack => {
-        return card.packCode === pack.code;
-    });
-
-    if(!pack) {
-        return false;
-    }
-
-    let releaseDate = pack.releaseDate;
-
-    if(!releaseDate) {
-        return false;
-    }
-
-    releaseDate = moment(releaseDate, 'YYYY-MM-DD');
-    let now = moment();
-
-    return releaseDate <= now;
-}
-
 class DeckValidator {
     constructor(packs, restrictedListRules) {
-        this.packs = packs;
+        const now = moment();
+        this.releasedPackCodes = new Set(packs.filter(pack => pack.releaseDate && moment(pack.releaseDate, 'YYYY-MM-DD') <= now).map(pack => pack.code));
 
         this.restrictedLists = restrictedListRules.map(rl => new RestrictedList(rl));
     }
@@ -66,9 +46,11 @@ class DeckValidator {
             }
         }
 
-        for(const card of deck.getUniqueCards()) {
-            if(!isCardInReleasedPack(this.packs, card)) {
-                unreleasedCards.push(card.label + ' is not yet released');
+        if(deck.format !== 'draft') {
+            for(const card of deck.getUniqueCards()) {
+                if(!this.releasedPackCodes.has(card.packCode)) {
+                    unreleasedCards.push(card.label + ' is not yet released');
+                }
             }
         }
 
