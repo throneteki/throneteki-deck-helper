@@ -4,12 +4,18 @@ class RestrictedList {
         this.pods = rules.pods || [];
     }
 
-    validate(cards) {
+    validate(deck) {
+        const cards = deck.getUniqueCards();
         let restrictedCardsOnList = cards.filter(card => this.rules.restricted.includes(card.code));
         let bannedCardsOnList = cards.filter(card => this.rules.banned.includes(card.code));
         let noBannedCards = true;
 
         let errors = [];
+
+        if(this.rules.format === 'draft' && deck.eventId !== this.rules._id) {
+            noBannedCards = false;
+            errors.push(`${this.rules.name}: Deck wasn't created for this event`);
+        }
 
         if(restrictedCardsOnList.length > 1) {
             errors.push(`${this.rules.name}: Contains more than 1 card on the restricted list: ${restrictedCardsOnList.map(card => card.name).join(', ')}`);

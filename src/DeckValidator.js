@@ -1,52 +1,27 @@
 const moment = require('moment');
 
 const AgendaRules = require('./AgendaRules');
+const DeckWrapper = require('./DeckWrapper');
+const Formats = require('./Formats');
 const RestrictedList = require('./RestrictedList');
 
-function getDeckCount(deck) {
-    let count = 0;
-
-    for(const cardEntry of deck) {
-        count += cardEntry.count;
-    }
-
-    return count;
-}
-
-function isCardInReleasedPack(packs, card) {
-    let pack = packs.find(pack => {
-        return card.packCode === pack.code;
-    });
-
-    if(!pack) {
-        return false;
-    }
-
-    let releaseDate = pack.releaseDate;
-
-    if(!releaseDate) {
-        return false;
-    }
-
-    releaseDate = moment(releaseDate, 'YYYY-MM-DD');
-    let now = moment();
-
-    return releaseDate <= now;
-}
-
 class DeckValidator {
-    constructor(packs, restrictedListRules) {
-        this.packs = packs;
+    constructor(packs, restrictedListRules, customRules = {}) {
+        const now = moment();
+        this.releasedPackCodes = new Set(packs.filter(pack => pack.releaseDate && moment(pack.releaseDate, 'YYYY-MM-DD') <= now).map(pack => pack.code));
 
         this.restrictedLists = restrictedListRules.map(rl => new RestrictedList(rl));
+        this.customRules = customRules;
     }
 
-    validateDeck(deck) {
+    validateDeck(rawDeck) {
+        const deck = new DeckWrapper(rawDeck);
+
         let errors = [];
         let unreleasedCards = [];
         let rules = this.getRules(deck);
-        let plotCount = getDeckCount(deck.plotCards);
-        let drawCount = getDeckCount(deck.drawCards);
+        let plotCount = deck.countPlotCards();
+        let drawCount = deck.countDrawCards();
 
         if(plotCount < rules.requiredPlots) {
             errors.push('Too few plot cards');
@@ -59,39 +34,25 @@ class DeckValidator {
         }
 
         for(const rule of rules.rules) {
-            if(!rule.condition(deck)) {
+            if(!rule.condition(deck, errors)) {
                 errors.push(rule.message);
             }
         }
 
-        let allCards = deck.plotCards.concat(deck.drawCards);
-        let cardCountByName = {};
+        let cardCountByName = deck.getCardCountsByName();
 
-        for(let cardQuantity of allCards) {
-            cardCountByName[cardQuantity.card.name] = cardCountByName[cardQuantity.card.name] || { name: cardQuantity.card.name, type: cardQuantity.card.type, limit: cardQuantity.card.deckLimit, count: 0 };
-            cardCountByName[cardQuantity.card.name].count += cardQuantity.count;
-        }
-
-        for(let card of deck.bannerCards || []) {
-            cardCountByName[card.name] = cardCountByName[card.name] || { name: card.name, type: card.type, limit: card.deckLimit, count: 0 };
-            cardCountByName[card.name].count += 1;
-        }
-
-        // Only add rookery cards here as they don't count towards deck limits
-        allCards = allCards.concat(deck.rookeryCards || []);
-
-        for(const cardQuantity of allCards) {
-            if(!rules.mayInclude(cardQuantity.card) || rules.cannotInclude(cardQuantity.card)) {
-                errors.push(cardQuantity.card.label + ' is not allowed by faction or agenda');
-            }
-
-            if(!isCardInReleasedPack(this.packs, cardQuantity.card)) {
-                unreleasedCards.push(cardQuantity.card.label + ' is not yet released');
+        for(const card of deck.getCardsIncludedInDeck()) {
+            if(!rules.mayInclude(card) || rules.cannotInclude(card)) {
+                errors.push(card.label + ' is not allowed by faction or agenda');
             }
         }
 
-        if(deck.agenda && !isCardInReleasedPack(this.packs, deck.agenda)) {
-            unreleasedCards.push(deck.agenda.label + ' is not yet released');
+        if(deck.format !== 'draft') {
+            for(const card of deck.getUniqueCards()) {
+                if(!this.releasedPackCodes.has(card.packCode)) {
+                    unreleasedCards.push(card.label + ' is not yet released');
+                }
+            }
         }
 
         let doubledPlots = Object.values(cardCountByName).filter(card => card.type === 'plot' && card.count === 2);
@@ -105,21 +66,8 @@ class DeckValidator {
             }
         }
 
-        let uniqueCards = allCards.map(cardQuantity => cardQuantity.card).concat(deck.bannerCards);
-
-        // Ensure agenda cards are validated against the restricted list
-        if(deck.agenda) {
-            uniqueCards.push(deck.agenda);
-        }
-
-        let restrictedListResults = this.restrictedLists.map(restrictedList => restrictedList.validate(uniqueCards));
-        let officialRestrictedResult = restrictedListResults[0];
-        let includesDraftCards = this.isDraftCard(deck.agenda) || allCards.some(cardQuantity => this.isDraftCard(cardQuantity.card));
-
-        if(includesDraftCards) {
-            errors.push('You cannot include Draft cards in a normal deck');
-        }
-
+        let restrictedListResults = this.restrictedLists.map(restrictedList => restrictedList.validate(deck));
+        let officialRestrictedResult = restrictedListResults[0] || { noBannedCards: true, restrictedRules: true, version: '' };
         const restrictedListErrors = restrictedListResults.reduce((errors, result) => errors.concat(result.errors), []);
 
         return {
@@ -136,36 +84,12 @@ class DeckValidator {
     }
 
     getRules(deck) {
-        const standardRules = {
-            requiredDraw: 60,
-            requiredPlots: 7,
-            maxDoubledPlots: 1
-        };
-
+        const formatRules = Formats.find(format => format.name === deck.format) || Formats.find(format => format.name === 'joust');
+        const customizedFormatRules = Object.assign({}, formatRules, this.customRules);
         let factionRules = this.getFactionRules(deck.faction.value.toLowerCase());
         let agendaRules = this.getAgendaRules(deck);
-        let rookeryRules = this.getRookeryRules(deck);
 
-        return this.combineValidationRules([standardRules, factionRules, rookeryRules].concat(agendaRules));
-    }
-
-    getRookeryRules() {
-        return {
-            rules: [
-                {
-                    message: 'More than 2 plot cards in rookery',
-                    condition: deck => {
-                        return !deck.rookeryCards || getDeckCount(deck.rookeryCards.filter(card => card.card.type === 'plot')) <= 2;
-                    }
-                },
-                {
-                    message: 'More than 10 draw cards in rookery',
-                    condition: deck => {
-                        return !deck.rookeryCards || getDeckCount(deck.rookeryCards.filter(card => card.card.type !== 'plot')) <= 10;
-                    }
-                }
-            ]
-        };
+        return this.combineValidationRules([customizedFormatRules, factionRules].concat(agendaRules));
     }
 
     getFactionRules(faction) {
@@ -175,12 +99,7 @@ class DeckValidator {
     }
 
     getAgendaRules(deck) {
-        if(!deck.agenda) {
-            return [];
-        }
-
-        let allAgendas = [deck.agenda].concat(deck.bannerCards || []);
-        return allAgendas.map(agenda => AgendaRules[agenda.code]).filter(a => !!a);
+        return deck.agendas.map(agenda => AgendaRules[agenda.code]).filter(a => !!a);
     }
 
     combineValidationRules(validators) {

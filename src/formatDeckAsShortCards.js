@@ -5,10 +5,13 @@
 function formatDeckAsShortCards(deck) {
     let newDeck = {
         _id: deck._id,
+        draftCubeId: deck.draftCubeId,
+        eventId: deck.eventId,
         name: deck.name,
         username: deck.username,
         lastUpdated: deck.lastUpdated,
-        faction: { name: deck.faction.name, value: deck.faction.value }
+        faction: { name: deck.faction.name, value: deck.faction.value },
+        format: deck.format
     };
 
     if(deck.agenda) {
