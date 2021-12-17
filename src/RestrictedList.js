@@ -12,7 +12,7 @@ class RestrictedList {
 
         let errors = [];
 
-        if(this.rules.format === 'draft' && deck.eventId !== this.rules._id) {
+        if(this.rules.format === 'draft' && deck.eventId !== this.rules._id.toHexString()) {
             noBannedCards = false;
             errors.push(`${this.rules.name}: Deck wasn't created for this event`);
         }
