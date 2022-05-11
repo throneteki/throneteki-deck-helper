@@ -12,6 +12,7 @@ function formatDeckAsFullCards(deck, data) {
         _id: deck._id,
         draftCubeId: deck.draftCubeId,
         eventId: deck.eventId,
+        locked: deck.locked,
         format: deck.format,
         name: deck.name,
         username: deck.username,
