@@ -245,6 +245,15 @@ const agendaRules = {
             }
         }]
     },
+    // Banner of the Falcon
+    '23040': {
+        rules: [
+            {
+                message: 'You cannot include more than 12 in-faction cards in a deck with Banner of the Falcon',
+                condition: deck => deck.countDrawCards(card => card.faction === deck.faction.value) <= 12
+            }
+        ]
+    },
     // Draft Agendas
     // The Power of Wealth
     '00001': {
