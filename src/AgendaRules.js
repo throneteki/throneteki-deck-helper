@@ -245,6 +245,10 @@ const agendaRules = {
             }
         }]
     },
+    // Banner of the Falcon
+    '23040': {
+        cannotInclude: card => card.faction !== 'neutral' && card.type === 'location'
+    },
     // Draft Agendas
     // The Power of Wealth
     '00001': {
