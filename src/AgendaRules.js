@@ -250,7 +250,7 @@ const agendaRules = {
         rules: [
             {
                 message: 'Must contain 12 or more House Arryn cards',
-                condition: deck => deck.countDrawCards(card => card.hasTrait('House Arryn')) >= 12
+                condition: deck => deck.countDrawCards(card => hasTrait(card, 'House Arryn')) >= 12
             }
         ]
     },
