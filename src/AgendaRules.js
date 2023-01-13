@@ -245,6 +245,15 @@ const agendaRules = {
             }
         }]
     },
+    // Banner of the Falcon
+    '23040': {
+        rules: [
+            {
+                message: 'Must contain 12 or more House Arryn cards',
+                condition: deck => deck.countDrawCards(card => hasTrait(card, 'House Arryn')) >= 12
+            }
+        ]
+    },
     // Draft Agendas
     // The Power of Wealth
     '00001': {
